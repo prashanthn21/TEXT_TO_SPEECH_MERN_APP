@@ -1,19 +1,20 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { Play, Loader2, Send, AlertTriangle, RefreshCw } from "lucide-react"; // Icons
+import { motion } from "framer-motion";
 
-const TextToSpeech = () => {
-  // State variables to manage user input, audio URL, loading state, and error messages
+const App = () => {
   const [text, setText] = useState("");
-  const [audioUrl, setAudioUrl] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [audioUrl, setAudioUrl] = useState(null);
   const [history, setHistory] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     fetchHistory();
   }, []);
 
-  // Fetch previously generated audio files
+  // Fetch previous TTS history
   const fetchHistory = async () => {
     try {
       const response = await axios.get("http://localhost:5000/api/tts-history");
@@ -23,99 +24,99 @@ const TextToSpeech = () => {
     }
   };
 
-  // Function to handle the text-to-speech conversion
+  // Handle TTS conversion
   const handleConvert = async () => {
-    // Validate input: Ensure the text is not empty
+    setError(null);
+
     if (!text.trim()) {
-      setError("Please enter text to convert.");
+      setError("⚠️ Please enter text before converting!");
       return;
     }
 
-    // Reset states before making the API call
     setLoading(true);
-    setError("");
-    setAudioUrl("");
-
     try {
-      // Make a POST request to the backend API with the text
       const response = await axios.post("http://localhost:5000/api/tts", { text });
-
-      console.log("🔹 API Response:", response.data); // Debugging log for API response
-
-      // Check if the response contains a valid audio URL
-      if (response.data.audioUrl) {
-        const validUrl = response.data.audioUrl;
-        if (validUrl && validUrl.startsWith("http")) {
-          setAudioUrl(validUrl); // Update the audio URL state
-        } else {
-          setError("Invalid audio URL received from the server."); // Handle invalid URL
-        }
-      } else {
-        setError("Failed to generate audio. Try again."); // Handle missing audio URL
-      }
-    } catch (err) {
-      // Log and display error if the API call fails
-      console.error("❌ TTS API Error:", err);
-      setError("Something went wrong. Please check the server.");
-    } finally {
-      // Reset the loading state after the API call
-      setLoading(false);
+      setAudioUrl(response.data.audioUrl);
+      fetchHistory(); // Refresh history after new conversion
+    } catch (error) {
+      setError("❌ Error generating speech. Please try again.");
+      console.error("❌ API Error:", error);
     }
+    setLoading(false);
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
-      {/* Page title */}
-      <h1 className="text-2xl font-bold mb-4">Text-to-Speech Converter</h1>
-
-      {/* Text input area */}
-      <textarea
-        className="w-96 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-        rows="3"
-        placeholder="Enter text here..."
-        value={text}
-        onChange={(e) => setText(e.target.value)} // Update text state on input change
-      />
-
-      {/* Convert button */}
-      <button
-        onClick={handleConvert}
-        className="mt-4 bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
-        disabled={loading} // Disable button while loading
+    <div className="flex flex-col items-center min-h-screen bg-gradient-to-r from-blue-500 to-indigo-600 p-10 text-white">
+      <motion.h1 
+        className="text-4xl font-bold mb-6" 
+        initial={{ opacity: 0, y: -10 }} 
+        animate={{ opacity: 1, y: 0 }} 
+        transition={{ duration: 0.5 }}
       >
-        {loading ? "Converting..." : "Convert to Speech"} {/* Show loading state */}
-      </button>
+        🎤 Text-to-Speech Converter
+      </motion.h1>
 
-      {/* Error message display */}
-      {error && <p className="text-red-500 mt-2">{error}</p>}
-
-      {/* Audio player for the generated speech */}
-      {audioUrl && (
-        <div className="mt-4">
-          <p className="font-semibold">Generated Audio:</p>
-          <audio controls className="mt-2">
-            <source src={audioUrl} type="audio/mpeg" />
-            Your browser does not support the audio element.
-          </audio>
-          <p className="text-sm text-gray-500">🔗 {audioUrl}</p> {/* Display audio URL */}
-        </div>
+      {/* Error Alert */}
+      {error && (
+        <motion.div
+          className="bg-red-500 text-white p-3 rounded-lg flex items-center gap-2 shadow-lg"
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <AlertTriangle className="w-5 h-5" />
+          {error}
+        </motion.div>
       )}
 
-      {/* History Section */}
-      <h2 className="text-2xl font-semibold mt-8">Previous Conversions</h2>
-      <ul className="w-full max-w-2xl">
+      {/* Text Input */}
+      <motion.textarea
+        className="border p-3 w-full max-w-lg h-32 rounded-lg bg-white text-black shadow-lg mt-4"
+        placeholder="Enter text..."
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        whileFocus={{ scale: 1.05 }}
+      ></motion.textarea>
+
+      {/* Convert Button */}
+      <motion.button
+        onClick={handleConvert}
+        className="mt-4 px-6 py-2 flex items-center bg-blue-700 hover:bg-blue-800 text-white rounded-lg shadow-lg transition duration-300"
+        whileHover={{ scale: 1.05 }}
+      >
+        {loading ? <Loader2 className="animate-spin mr-2" /> : <Send className="mr-2" />}
+        Convert to Speech
+      </motion.button>
+
+      {/* Latest Audio */}
+      {audioUrl && (
+        <motion.div 
+          className="mt-6 w-full max-w-lg p-4 bg-white text-black rounded-lg shadow-lg"
+          initial={{ opacity: 0 }} 
+          animate={{ opacity: 1 }} 
+          transition={{ duration: 0.5 }}
+        >
+          <h2 className="text-lg font-semibold">🎵 Latest Audio</h2>
+          <audio controls className="w-full mt-2">
+            <source src={audioUrl} type="audio/mpeg" />
+          </audio>
+        </motion.div>
+      )}
+
+      {/* Previous Audio List */}
+      <div className="mt-8 w-full max-w-lg">
+        <h2 className="text-xl font-semibold mb-3">📜 Previous Conversions</h2>
+        {history.length === 0 && <p>No previous conversions.</p>}
         {history.map((item, index) => (
-          <li key={index} className="border p-2 mt-2 shadow rounded">
-            <p className="font-medium">{item.text}</p>
-            <audio controls className="w-full mt-2">
+          <div key={index} className="bg-white text-black p-3 rounded-lg mb-2 shadow-lg flex items-center justify-between">
+            <span>{item.text.substring(0, 30)}...</span>
+            <audio controls>
               <source src={item.audioUrl} type="audio/mpeg" />
-              Your browser does not support the audio tag.
             </audio>
-          </li>
+          </div>
         ))}
-      </ul>
+      </div>
     </div>
   );
 };
 
-export default TextToSpeech;
+export default App;

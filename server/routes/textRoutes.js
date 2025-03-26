@@ -2,14 +2,19 @@ const express = require("express");
 const axios = require("axios");
 const fs = require("fs");
 const path = require("path");
-const TextAudio = require("../models/TextModel"); // Import model
+const mongoose = require("mongoose");
 require("dotenv").config();
 
 const router = express.Router();
 
+// MongoDB Model for storing history
+const TTSHistory = mongoose.model("TTSHistory", new mongoose.Schema({
+  text: String,
+  audioUrl: String,
+  createdAt: { type: Date, default: Date.now }
+}));
 
-
-// Ensure the public directory exists for storing audio files
+// Ensure public directory exists
 const audioDirectory = path.join(__dirname, "../public");
 if (!fs.existsSync(audioDirectory)) {
   fs.mkdirSync(audioDirectory, { recursive: true });
@@ -19,73 +24,61 @@ if (!fs.existsSync(audioDirectory)) {
 router.post("/tts", async (req, res) => {
   try {
     const { text } = req.body;
-
     if (!text || text.trim() === "") {
       return res.status(400).json({ error: "Text is required for conversion" });
     }
 
     console.log("🔹 Received text for TTS:", text);
 
-    // ElevenLabs API Key (from .env)
     const apiKey = process.env.ELEVENLABS_API_KEY;
     if (!apiKey) {
       return res.status(500).json({ error: "Missing ElevenLabs API Key" });
     }
-    console.log("🟢 API Key Loaded:", process.env.ELEVENLABS_API_KEY ? "Yes" : "No");
 
     // ElevenLabs API Request
     const response = await axios.post(
-      "https://api.elevenlabs.io/v1/text-to-speech/EXAVITQu4vr4xnSDxMaL",  // Adam (Male, English)
+      "https://api.elevenlabs.io/v1/text-to-speech/EXAVITQu4vr4xnSDxMaL",
       {
         text: text,
-        voice_settings: {
-          stability: 0.5,
-          similarity_boost: 0.5
-        }
+        voice_settings: { stability: 0.5, similarity_boost: 0.5 },
       },
       {
         headers: {
           "Content-Type": "application/json",
-          "xi-api-key": apiKey
+          "xi-api-key": apiKey,
         },
-        responseType: "arraybuffer" // Receive audio as binary data
+        responseType: "arraybuffer",
       }
     );
-
-    console.log("✅ ElevenLabs TTS responded successfully!");
 
     // Generate a unique filename for the audio file
     const audioFilename = `tts-audio-${Date.now()}.mp3`;
     const audioPath = path.join(audioDirectory, audioFilename);
-
-    // Save audio file
     fs.writeFileSync(audioPath, response.data);
 
-    // Construct the accessible URL for the audio file
+    // Construct accessible URL
     const audioUrl = `http://localhost:5000/public/${audioFilename}`;
 
-    console.log("🎵 Audio saved at:", audioUrl);
-
-    // Save to MongoDB
-    const newTextAudio = new TextAudio({ text, audioUrl });
-    await newTextAudio.save();
-    console.log("✅ Data saved to MongoDB");
+    // Store in MongoDB
+    const newHistory = new TTSHistory({ text, audioUrl });
+    await newHistory.save();
 
     res.status(200).json({ audioUrl });
   } catch (error) {
-    console.error("❌ TTS Error:", error.message);
+    console.error("❌ TTS Error:", error);
     res.status(500).json({ error: "Failed to convert text to speech" });
   }
 });
 
-
-// ✅ Fetch all saved audio data
+// Fetch all previous audio files
 router.get("/tts-history", async (req, res) => {
   try {
-    const history = await TextAudio.find().sort({ createdAt: -1 });
+    const history = await TTSHistory.find().sort({ createdAt: -1 }).limit(10); // Get latest 10 records
     res.status(200).json(history);
   } catch (error) {
+    console.error("❌ History Fetch Error:", error);
     res.status(500).json({ error: "Failed to fetch history" });
   }
 });
+
 module.exports = router;
