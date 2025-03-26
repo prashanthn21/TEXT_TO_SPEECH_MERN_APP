@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 
 const TextToSpeech = () => {
@@ -7,6 +7,21 @@ const TextToSpeech = () => {
   const [audioUrl, setAudioUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [history, setHistory] = useState([]);
+
+  useEffect(() => {
+    fetchHistory();
+  }, []);
+
+  // Fetch previously generated audio files
+  const fetchHistory = async () => {
+    try {
+      const response = await axios.get("http://localhost:5000/api/tts-history");
+      setHistory(response.data);
+    } catch (error) {
+      console.error("❌ Error fetching history:", error);
+    }
+  };
 
   // Function to handle the text-to-speech conversion
   const handleConvert = async () => {
@@ -85,6 +100,20 @@ const TextToSpeech = () => {
           <p className="text-sm text-gray-500">🔗 {audioUrl}</p> {/* Display audio URL */}
         </div>
       )}
+
+      {/* History Section */}
+      <h2 className="text-2xl font-semibold mt-8">Previous Conversions</h2>
+      <ul className="w-full max-w-2xl">
+        {history.map((item, index) => (
+          <li key={index} className="border p-2 mt-2 shadow rounded">
+            <p className="font-medium">{item.text}</p>
+            <audio controls className="w-full mt-2">
+              <source src={item.audioUrl} type="audio/mpeg" />
+              Your browser does not support the audio tag.
+            </audio>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 };
