@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { Play, Loader2, Send, AlertTriangle, RefreshCw } from "lucide-react"; // Icons
+import { Loader2, Send, AlertTriangle } from "lucide-react"; // Icons
 import { motion } from "framer-motion";
 
 const App = () => {
