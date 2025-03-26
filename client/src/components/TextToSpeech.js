@@ -29,7 +29,7 @@ const App = () => {
     setError(null);
 
     if (!text.trim()) {
-      setError("⚠️ Please enter text before converting!");
+      setError(" Please enter text before converting!");
       return;
     }
 

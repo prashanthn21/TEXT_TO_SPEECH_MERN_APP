@@ -25,14 +25,14 @@ router.post("/tts", async (req, res) => {
   try {
     const { text } = req.body;
     if (!text || text.trim() === "") {
-      return res.status(400).json({ error: "Text is required for conversion" });
+      return res.status(400).json({ error: " Please enter text before converting!"});
     }
 
     console.log("🔹 Received text for TTS:", text);
 
     const apiKey = process.env.ELEVENLABS_API_KEY;
     if (!apiKey) {
-      return res.status(500).json({ error: "Missing ElevenLabs API Key" });
+      return res.status(500).json({ error: "❌ Missing ElevenLabs API Key. Contact support." });
     }
 
     // ElevenLabs API Request
@@ -50,6 +50,10 @@ router.post("/tts", async (req, res) => {
         responseType: "arraybuffer",
       }
     );
+    
+    if (!response.data) {
+      return res.status(500).json({ error: "❌ API Error: No audio received from ElevenLabs." });
+    }
 
     // Generate a unique filename for the audio file
     const audioFilename = `tts-audio-${Date.now()}.mp3`;
@@ -66,7 +70,7 @@ router.post("/tts", async (req, res) => {
     res.status(200).json({ audioUrl });
   } catch (error) {
     console.error("❌ TTS Error:", error);
-    res.status(500).json({ error: "Failed to convert text to speech" });
+    res.status(500).json({ error: " ❌ Failed to convert text to speech" });
   }
 });
 
@@ -77,7 +81,7 @@ router.get("/tts-history", async (req, res) => {
     res.status(200).json(history);
   } catch (error) {
     console.error("❌ History Fetch Error:", error);
-    res.status(500).json({ error: "Failed to fetch history" });
+    res.status(500).json({ error: " ❌ Failed to fetch history" });
   }
 });
 
