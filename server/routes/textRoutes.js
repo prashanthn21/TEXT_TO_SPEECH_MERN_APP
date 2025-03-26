@@ -2,6 +2,7 @@ const express = require("express");
 const axios = require("axios");
 const fs = require("fs");
 const path = require("path");
+const TextAudio = require("../models/TextModel"); // Import model
 require("dotenv").config();
 
 const router = express.Router();
@@ -65,6 +66,11 @@ router.post("/tts", async (req, res) => {
 
     console.log("🎵 Audio saved at:", audioUrl);
 
+    // Save to MongoDB
+    const newTextAudio = new TextAudio({ text, audioUrl });
+    await newTextAudio.save();
+    console.log("✅ Data saved to MongoDB");
+
     res.status(200).json({ audioUrl });
   } catch (error) {
     console.error("❌ TTS Error:", error.message);
@@ -72,4 +78,14 @@ router.post("/tts", async (req, res) => {
   }
 });
 
+
+// ✅ Fetch all saved audio data
+router.get("/tts-history", async (req, res) => {
+  try {
+    const history = await TextAudio.find().sort({ createdAt: -1 });
+    res.status(200).json(history);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch history" });
+  }
+});
 module.exports = router;
