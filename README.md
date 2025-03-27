@@ -1,6 +1,3 @@
-Here's an improved version of your README.md for better understanding:
-
----
 
 # 🗣️ Text-to-Speech MERN App
 
@@ -124,9 +121,6 @@ vercel
 ## 🙌 Contributions
 Feel free to contribute! Open issues or pull requests.
 
-## 📜 License
-This project is licensed under the MIT License.
 
----
 
 Feel free to customize further if needed!
