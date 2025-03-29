@@ -9,16 +9,14 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-// ✅ Serve static files correctly for Vercel
+// ✅ Serve static files correctly
 app.use("/public", express.static(path.resolve(__dirname, "public")));
 app.use("/uploads", express.static(path.resolve(__dirname, "uploads")));
 
-// ✅ Ensure correct API routes
+// ✅ API Routes
 app.use("/api", ttsRoutes);
 
-const PORT = process.env.PORT || 5000;
-
-// ✅ Root route check
+// ✅ Root Route
 app.get("/", (req, res) => {
   res.send("✅ Backend is running on Vercel!");
 });
@@ -29,5 +27,5 @@ mongoose
   .then(() => console.log("✅ Connected to MongoDB Atlas"))
   .catch((err) => console.error("❌ MongoDB Connection Error:", err));
 
-// ✅ Ensure Vercel handles dynamic routing
+// ✅ Export app for Vercel
 module.exports = app;
