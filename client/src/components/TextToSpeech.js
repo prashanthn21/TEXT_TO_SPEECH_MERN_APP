@@ -17,7 +17,7 @@ const App = () => {
   // Fetch previous TTS history
   const fetchHistory = async () => {
     try {
-      const response = await axios.get("http://localhost:5000/api/tts-history");
+      const response = await axios.get("https://tts-server-3fvofbrca-prashanths-projects-d114deca.vercel.app/api/tts-history");
       setHistory(response.data);
     } catch (error) {
       console.error("❌ Error fetching history:", error);
@@ -35,7 +35,7 @@ const App = () => {
 
     setLoading(true);
     try {
-      const response = await axios.post("http://localhost:5000/api/tts", { text });
+      const response = await axios.post("https://tts-server-3fvofbrca-prashanths-projects-d114deca.vercel.app/api/tts", { text });
       setAudioUrl(response.data.audioUrl);
       fetchHistory(); // Refresh history after new conversion
     } catch (error) {
